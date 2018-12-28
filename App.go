@@ -13,12 +13,14 @@ func processURL(inputURL string) (tinyURL string){
 	return fmt.Sprintf("%x", bs[:4])
 }
 
-func saveURL(tinyURL string) (err error){
-	fmt.Println("Hello, 世界")
+func saveURL(inputURL string, tinyURL string, urlDB map[string]string) (err error){
+	urlDB[inputURL] = tinyURL
 	return nil
 }
 
 func routeTo(w http.ResponseWriter, r *http.Request){
+	urlDB := make(map[string]string)
+
 	switch r.Method {
 	case "GET":
 		fmt.Fprint(w, "Welcome to TinyUrl, this is a server, why dont you try to make a request?")
@@ -33,12 +35,12 @@ func routeTo(w http.ResponseWriter, r *http.Request){
 		inputURL := r.FormValue("inputURL")
 
 		tinyURL := processURL(inputURL)
-		if err := saveURL(tinyURL); err != nil {
+		if err := saveURL(inputURL, tinyURL, urlDB); err != nil {
 			fmt.Fprintf(w, "saveURL err: %v", err)
 			return
 		}
 
-		fmt.Fprintf(w, "tinyURL is %s\n", tinyURL)
+		fmt.Fprintf(w, "saved tinyURL is %s\n", urlDB[inputURL])
 
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")

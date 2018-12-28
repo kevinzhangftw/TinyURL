@@ -10,7 +10,7 @@ func processURL(inputURL string) (tinyURL string){
 	h := sha1.New()
 	h.Write([]byte(inputURL))
 	bs := h.Sum(nil)
-	return string(bs[:8])
+	return fmt.Sprintf("%x", bs[:4])
 }
 
 func saveURL(tinyURL string){
@@ -21,6 +21,8 @@ func routeTo(w http.ResponseWriter, r *http.Request){
 	switch r.Method {
 	case "GET":
 		fmt.Fprint(w, "Welcome to TinyUrl, this is a server, why dont you try to make a request?")
+		fmt.Fprint(w, "request URL is ", r.URL)
+
 
 	case "POST":
 		if err := r.ParseForm(); err != nil {

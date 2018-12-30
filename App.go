@@ -1,39 +1,43 @@
 package main
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"net/http"
-	"crypto/sha1"
 )
 
-var urlDB map[string]string
+type ServerImpl struct {
+	urlDB map[string]string
+}
 
-func processURL(inputURL string) (tinyURL string){
+var s ServerImpl
+
+func (s ServerImpl) processURL(inputURL string) (tinyURL string) {
 	h := sha1.New()
 	h.Write([]byte(inputURL))
 	bs := h.Sum(nil)
 	return fmt.Sprintf("%x", bs[:4])
 }
 
-func saveURL(inputURL string, tinyURL string, urlDB map[string]string) (err error){
-	urlDB["/" + tinyURL] = inputURL
-	fmt.Println("saving new post request, db=", urlDB)
+func (s *ServerImpl) saveURL(inputURL string, tinyURL string) (err error) {
+	s.urlDB["/"+tinyURL] = inputURL
+	fmt.Println("saving new post request, db=", s.urlDB)
 	return nil
 }
 
-func urlLookup(urlDB map[string]string, tinyUrl string) (orURL string) {
-	fmt.Println("urlDB[tinyUrl] is ", urlDB[tinyUrl])
-	fmt.Println("urlDB", urlDB)
-	return urlDB[tinyUrl]
+func (s ServerImpl) urlLookup(tinyUrl string) (orURL string) {
+	fmt.Println("urlDB[tinyUrl] is ", s.urlDB[tinyUrl])
+	fmt.Println("urlDB", s.urlDB)
+	return s.urlDB[tinyUrl]
 }
 
-func routeTo(w http.ResponseWriter, r *http.Request){
+func routeTo(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
 		fmt.Fprint(w, "Welcome to TinyUrl, this is a server, why dont you try to make a request?")
 		if r.URL.String() != "/" {
-			ogURL := urlLookup(urlDB, r.URL.String())
+			ogURL := s.urlLookup( r.URL.String())
 			fmt.Fprint(w, "\n now redirect to ... ", ogURL)
 		}
 
@@ -45,8 +49,8 @@ func routeTo(w http.ResponseWriter, r *http.Request){
 
 		inputURL := r.FormValue("inputURL")
 
-		tinyURL := processURL(inputURL)
-		if err := saveURL(inputURL, tinyURL, urlDB); err != nil {
+		tinyURL := s.processURL(inputURL)
+		if err := s.saveURL(inputURL, tinyURL); err != nil {
 			fmt.Fprintf(w, "saveURL err: %v", err)
 			return
 		}
@@ -59,7 +63,7 @@ func routeTo(w http.ResponseWriter, r *http.Request){
 }
 
 func bootUpServer() {
-	urlDB = map[string]string{}
+	s = ServerImpl{map[string]string{}}
 	http.HandleFunc("/", routeTo)
 	http.ListenAndServe(":8000", nil)
 }
@@ -67,4 +71,3 @@ func bootUpServer() {
 func main() {
 	bootUpServer()
 }
-

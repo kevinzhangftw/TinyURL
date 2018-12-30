@@ -26,7 +26,6 @@ func (s *ServerImpl) saveURL(inputURL string, tinyURL string) (err error) {
 }
 
 func (s ServerImpl) urlLookup(tinyUrl string) (orURL string) {
-	fmt.Println("urlDB[tinyUrl] is ", s.urlDB[tinyUrl])
 	fmt.Println("urlDB", s.urlDB)
 	return s.urlDB[tinyUrl]
 }
@@ -38,6 +37,7 @@ func routeTo(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Welcome to TinyUrl, this is a server, why dont you try to make a request?")
 		if r.URL.String() != "/" {
 			ogURL := s.urlLookup( r.URL.String())
+			http.Redirect(w, r, ogURL, http.StatusSeeOther)
 			fmt.Fprint(w, "\n now redirect to ... ", ogURL)
 		}
 
